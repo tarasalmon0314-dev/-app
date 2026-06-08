@@ -109,6 +109,8 @@ with tab_study:
             disabled=st.session_state.is_answered
         )
         
+safe_content = current_arg['content'].replace("\n", "<br>")
+        
         st.write("↓ **下のボタン長押しで解答を一時表示**")
         st.markdown(
             f"""
@@ -140,8 +142,8 @@ with tab_study:
             }}
             </style>
             
-            <div class="peek-button"> 解答を一時表示</div>
-            <div class="answer-box">{current_arg['content']}</div>
+            <div class="peek-button">解答を一時表示</div>
+            <div class="answer-box">{safe_content}</div>
             """, 
             unsafe_allow_html=True
         )
