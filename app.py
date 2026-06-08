@@ -56,8 +56,8 @@ def fetch_data():
 data_list = fetch_data()
 
 # --- サイドバー：論証一覧 & 削除機能 ---
-st.sidebar.title(f" {st.session_state.user_id} の論証")
-if st.sidebar.button(" データを同期・更新"):
+st.sidebar.title(f"{st.session_state.user_id} の論証")
+if st.sidebar.button("データを同期・更新"):
     st.rerun()
 
 current_arg = None
@@ -79,7 +79,7 @@ if data_list:
         
     current_arg = data_list[st.session_state.current_index]
     
-    # 🛠️ 変更点①：削除ボタンの設置
+    # 🛠️ 削除ボタンの設置
     st.sidebar.write("---")
     with st.sidebar.expander("⚠️ 危険領域（データの削除）"):
         st.write("現在選択中の論証をデータベースから完全に消去します。")
@@ -94,7 +94,7 @@ else:
     st.sidebar.info("論証が登録されていません。")
 
 # メイン領域のタブ
-tab_study, tab_manage = st.tabs([" 暗記テスト", "論証の追加・編集"])
+tab_study, tab_manage = st.tabs(["暗記テスト", "論証の追加・編集"])
 
 # --- タブ1：暗記テスト ---
 with tab_study:
@@ -109,11 +109,12 @@ with tab_study:
             disabled=st.session_state.is_answered
         )
         
-safe_content = current_arg['content'].replace("\n", "<br>")
+        # 💡 【対策】インデントをwithブロック内に正しく修正
+        safe_content = current_arg['content'].replace("\n", "<br>")
         
-st.write("↓ **下のボタン長押しで解答を一時表示**")
-st.markdown(
-    f"""
+        st.write("↓ **下のボタン長押しで解答を一時表示**")
+        st.markdown(
+            f"""
             <style>
             .peek-button {{
                 display: inline-block;
@@ -178,22 +179,22 @@ st.markdown(
     else:
         st.info("右側のサイドバー、または「論証の追加・編集」タブから、まずは論証を登録してください。")
 
-# --- タブ2：🛠️ 変更点②：論証の追加・編集 ---
+# --- タブ2：論証の追加・編集 ---
 with tab_manage:
-    st.subheader(" 論証データの登録・編集変更")
+    st.subheader("論証データの登録・編集変更")
     
     # ラジオボタンで「新規追加モード」か「編集モード」かを選べるようにする
-    manage_mode = st.radio("操作を選択してください:", ["＋ 新しい論証を追加する", " 現在サイドバーで選択中の論証を修正する"], horizontal=True)
+    manage_mode = st.radio("操作を選択してください:", ["＋ 新しい論証を追加する", "現在サイドバーで選択中の論証を修正する"], horizontal=True)
     
     if manage_mode == "＋ 新しい論証を追加する":
         edit_issue = ""
         edit_content = ""
-        btn_text = " 新規データをデータベースに保存"
+        btn_text = "新規データをデータベースに保存"
     else:
         if current_arg:
             edit_issue = current_arg["issue"]
             edit_content = current_arg["content"]
-            btn_text = " 修正内容を上書き保存する"
+            btn_text = "修正内容を上書き保存する"
         else:
             st.warning("編集するデータがありません。")
             st.stop()
