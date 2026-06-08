@@ -173,9 +173,9 @@ with tab_study:
                     st.toast(f"ステータスを【{status}】に更新しました！")
                     st.rerun()
                     
-                if c_p.button("完璧🟢"): update_status("完璧")
-                if c_r.button("要補強🟡"): update_status("要補強")
-                if c_b.button("不可🔴"): update_status("不可")
+                if c_p.button("完璧🟢"): update_status("完璧🟢")
+                if c_r.button("要補強🟡"): update_status("要補強🟡")
+                if c_b.button("不可🔴"): update_status("不可🔴")
     else:
         st.info("右側のサイドバー、または「論証の追加・編集」タブから、まずは論証を登録してください。")
 
