@@ -1,3 +1,4 @@
+import streamlit as str
 import streamlit as st
 from supabase import create_client, Client
 
@@ -7,10 +8,10 @@ st.set_page_config(page_title="予備試験 論証暗記ツール Pro", layout="
 # ==========================================
 # 🔴 ご自身のSupabaseのURLとAPIキー（anon key）に書き換えてください
 # ==========================================
-SUPABASE_URL = "https://ymozpxiqdsuhhhnizfey.supabase.co"
-SUPABASE_KEY = "sb_publishable_IaB15FYlOKVmLwS_RskAgA_WacwtLeV"
+SUPABASE_URL = "https://ymozpxiqdsuhhnizfey.supabase.co"
+SUPABASE_KEY = "sb_publishable_IaB15FY10KVMlWs_RskAgA_WacwtLeV"
 
-# Supabaseクライアントの初期化（キャッシュして高速化）
+# Supabaseクライアントの初期化
 @st.cache_resource
 def get_supabase() -> Client:
     return create_client(SUPABASE_URL, SUPABASE_KEY)
@@ -29,7 +30,7 @@ if "is_answered" not in st.session_state:
 # 🔓 画面1：ログイン画面
 # ==========================================
 if not st.session_state.user_id:
-    st.title("⚖️ 加藤塾 論証暗記アプリ")
+    st.title("SHIVA Legal 論証暗記アプリ")
     st.write("論証のアウトプット・暗記度管理を徹底")
     
     with st.form("login_form"):
@@ -55,19 +56,22 @@ def fetch_data():
 
 data_list = fetch_data()
 
-# サイドバー：論証一覧
+# --- サイドバー：論証一覧 & 削除機能 ---
 st.sidebar.title(f" {st.session_state.user_id} の論証")
-if st.sidebar.button("データを同期・更新"):
+if st.sidebar.button(" データを同期・更新"):
     st.rerun()
 
-selected_issue = None
+current_arg = None
 if data_list:
     options = [f"{item['issue']} [{item['status']}]" for item in data_list]
-    # 前回の選択位置を維持（配列の範囲内なら）
-    default_idx = st.session_state.current_index if st.session_state.current_index < len(data_list) else 0
-    selected_option = st.sidebar.radio("論点を選択:", options, index=default_idx)
     
-    # 選択されたインデックスを取得
+    # 範囲外エラーを防ぐ安全弁
+    if st.session_state.current_index >= len(data_list):
+        st.session_state.current_index = 0
+        
+    selected_option = st.sidebar.radio("論点を選択:", options, index=st.session_state.current_index)
+    
+    # 選択されたインデックスの更新
     current_idx = options.index(selected_option)
     if current_idx != st.session_state.current_index:
         st.session_state.current_index = current_idx
@@ -75,18 +79,29 @@ if data_list:
         st.rerun()
         
     current_arg = data_list[st.session_state.current_index]
+    
+    # 🛠️ 変更点①：削除ボタンの設置
+    st.sidebar.write("---")
+    with st.sidebar.expander("⚠️ 危険領域（データの削除）"):
+        st.write("現在選択中の論証をデータベースから完全に消去します。")
+        if st.button("❌ 選択中の論証を削除する", type="primary"):
+            # SupabaseからID指定で削除を実行
+            supabase.table("arguments").delete().eq("id", current_arg["id"]).execute()
+            st.toast(f"『{current_arg['issue']}』を削除しました")
+            st.session_state.current_index = max(0, st.session_state.current_index - 1)
+            st.session_state.is_answered = False
+            st.rerun()
 else:
-    current_arg = None
+    st.sidebar.info("論証が登録されていません。")
 
 # メイン領域のタブ
-tab_study, tab_manage = st.tabs([" 暗記テスト", "新しい論証を追加"])
+tab_study, tab_manage = st.tabs([" 暗記テスト", "論証の追加・編集"])
 
 # --- タブ1：暗記テスト ---
 with tab_study:
     if current_arg:
         st.subheader(f"問題: {current_arg['issue']}")
         
-        # 本試験を意識したタイピングエリア
         user_typed = st.text_area(
             "解答入力欄", 
             height=200, 
@@ -95,10 +110,7 @@ with tab_study:
             disabled=st.session_state.is_answered
         )
         
-        # --- 👉 【重要】ブラウザでのチラ見機能の実装 ---
-        # HTML/CSSを使って「ボタンを押している間だけ文字を浮き上がらせる」特殊なボタンを配置します
         st.write("↓ **下のボタン長押しで解答を一時表示**")
-        
         st.markdown(
             f"""
             <style>
@@ -137,7 +149,6 @@ with tab_study:
         
         st.write("---")
         
-        # 答え合わせとステータス更新
         col1, col2 = st.columns([1, 2])
         with col1:
             if st.button("解答確認", type="primary"):
@@ -155,8 +166,8 @@ with tab_study:
                 def update_status(status):
                     supabase.table("arguments").update({"status": status}).eq("id", current_arg["id"]).execute()
                     st.session_state.is_answered = False
-                    # 次の問題へ
-                    st.session_state.current_index = (st.session_state.current_index + 1) % len(data_list)
+                    if len(data_list) > 1:
+                        st.session_state.current_index = (st.session_state.current_index + 1) % len(data_list)
                     st.toast(f"ステータスを【{status}】に更新しました！")
                     st.rerun()
                     
@@ -164,23 +175,51 @@ with tab_study:
                 if c_r.button("要補強🟡"): update_status("要補強")
                 if c_b.button("不可🔴"): update_status("不可")
     else:
-        st.info("右側のサイドバー、または「新しい論証を追加」タブから、まずは論証を登録してください。")
+        st.info("右側のサイドバー、または「論証の追加・編集」タブから、まずは論証を登録してください。")
 
-# --- タブ2：論証の追加・管理 ---
+# --- タブ2：🛠️ 変更点②：論証の追加・編集 ---
 with tab_manage:
-    st.subheader("新しい論証データをクラウドに登録")
-    new_issue = st.text_input("新規論点名 (例: 生存権の法的性格（憲法25条）)")
-    new_content = st.text_area("論証本文 (模範解答)", height=300)
+    st.subheader(" 論証データの登録・編集変更")
     
-    if st.button(" データベースに保存"):
-        if new_issue.strip() and new_content.strip():
-            supabase.table("arguments").insert({
-                "user_id": st.session_state.user_id,
-                "issue": new_issue.strip(),
-                "content": new_content.strip(),
-                "status": "未着手"
-            }).execute()
-            st.success(f"『{new_issue}』を登録しました！「暗記テスト」タブやサイドバーを確認してください。")
+    # ラジオボタンで「新規追加モード」か「編集モード」かを選べるようにする
+    manage_mode = st.radio("操作を選択してください:", ["＋ 新しい論証を追加する", " 現在サイドバーで選択中の論証を修正する"], horizontal=True)
+    
+    if manage_mode == "＋ 新しい論証を追加する":
+        edit_issue = ""
+        edit_content = ""
+        btn_text = " 新規データをデータベースに保存"
+    else:
+        if current_arg:
+            edit_issue = current_arg["issue"]
+            edit_content = current_arg["content"]
+            btn_text = " 修正内容を上書き保存する"
+        else:
+            st.warning("編集するデータがありません。")
+            st.stop()
+            
+    # 入力フォーム（モードに応じて初期値が自動で変わります）
+    input_issue = st.text_input("論点名", value=edit_issue)
+    input_content = st.text_area("論証本文 (模範解答)", value=edit_content, height=300)
+    
+    if st.button(btn_text):
+        if input_issue.strip() and input_content.strip():
+            if manage_mode == "＋ 新しい論証を追加する":
+                # 新規追加の処理
+                supabase.table("arguments").insert({
+                    "user_id": st.session_state.user_id,
+                    "issue": input_issue.strip(),
+                    "content": input_content.strip(),
+                    "status": "未着手"
+                }).execute()
+                st.success(f"『{input_issue}』を新しく登録しました！")
+            else:
+                # 🛠️ 編集（上書き更新）の処理
+                supabase.table("arguments").update({
+                    "issue": input_issue.strip(),
+                    "content": input_content.strip()
+                }).eq("id", current_arg["id"]).execute()
+                st.success(f"『{input_issue}』の修正を上書き保存しました！")
+                
             st.rerun()
         else:
             st.error("論点名と本文の両方を入力してください。")
