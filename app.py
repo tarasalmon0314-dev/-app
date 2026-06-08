@@ -111,9 +111,9 @@ with tab_study:
         
 safe_content = current_arg['content'].replace("\n", "<br>")
         
-        st.write("↓ **下のボタン長押しで解答を一時表示**")
-        st.markdown(
-            f"""
+st.write("↓ **下のボタン長押しで解答を一時表示**")
+st.markdown(
+    f"""
             <style>
             .peek-button {{
                 display: inline-block;
