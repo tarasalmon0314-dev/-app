@@ -29,11 +29,11 @@ if "is_answered" not in st.session_state:
 # 🔓 画面1：ログイン画面
 # ==========================================
 if not st.session_state.user_id:
-    st.title("⚖️ SHIBA Legal 暗記アプリ (Web版)")
-    st.write("一般公開用・マルチユーザー対応システム")
+    st.title("⚖️ 加藤塾 論証暗記アプリ")
+    st.write("論証のアウトプット・暗記度管理を徹底")
     
     with st.form("login_form"):
-        user_input = st.text_input("あなたのユーザーID（名前など半角英数字）を入力してください", placeholder="例: takuya, sakura")
+        user_input = st.text_input("あなたのユーザーID（名前など半角英数字）を入力してください", placeholder="例: kenta, iseki")
         submit_login = st.form_submit_button("ログインして始める")
         
         if submit_login:
@@ -56,8 +56,8 @@ def fetch_data():
 data_list = fetch_data()
 
 # サイドバー：論証一覧
-st.sidebar.title(f"📋 {st.session_state.user_id} の論証")
-if st.sidebar.button("🔄 データを同期・更新"):
+st.sidebar.title(f" {st.session_state.user_id} の論証")
+if st.sidebar.button("データを同期・更新"):
     st.rerun()
 
 selected_issue = None
@@ -79,7 +79,7 @@ else:
     current_arg = None
 
 # メイン領域のタブ
-tab_study, tab_manage = st.tabs(["✍️ 暗記テスト", "🚀 新しい論証を追加"])
+tab_study, tab_manage = st.tabs([" 暗記テスト", "新しい論証を追加"])
 
 # --- タブ1：暗記テスト ---
 with tab_study:
@@ -88,7 +88,7 @@ with tab_study:
         
         # 本試験を意識したタイピングエリア
         user_typed = st.text_area(
-            "あなたの解答入力欄（本試験のつもりでタイピングしてください）", 
+            "解答入力欄", 
             height=200, 
             placeholder="ここに論証を入力...", 
             key=f"input_{current_arg['id']}",
@@ -97,7 +97,7 @@ with tab_study:
         
         # --- 👉 【重要】ブラウザでのチラ見機能の実装 ---
         # HTML/CSSを使って「ボタンを押している間だけ文字を浮き上がらせる」特殊なボタンを配置します
-        st.write("👇 **下のボタンをマウスで「左クリックしたまま長押し」している間だけ、解答がチラ見できます**")
+        st.write("↓ **下のボタン長押しで解答を一時表示**")
         
         st.markdown(
             f"""
@@ -129,7 +129,7 @@ with tab_study:
             }}
             </style>
             
-            <div class="peek-button">👀 ここを左クリック長押しで解答をチラ見</div>
+            <div class="peek-button"> 解答を一時表示</div>
             <div class="answer-box">{current_arg['content']}</div>
             """, 
             unsafe_allow_html=True
@@ -140,7 +140,7 @@ with tab_study:
         # 答え合わせとステータス更新
         col1, col2 = st.columns([1, 2])
         with col1:
-            if st.button("解答を確定して答え合わせ", type="primary"):
+            if st.button("解答確認", type="primary"):
                 st.session_state.is_answered = True
                 st.rerun()
                 
@@ -172,7 +172,7 @@ with tab_manage:
     new_issue = st.text_input("新規論点名 (例: 生存権の法的性格（憲法25条）)")
     new_content = st.text_area("論証本文 (模範解答)", height=300)
     
-    if st.button("🚀 データベースに保存"):
+    if st.button(" データベースに保存"):
         if new_issue.strip() and new_content.strip():
             supabase.table("arguments").insert({
                 "user_id": st.session_state.user_id,
