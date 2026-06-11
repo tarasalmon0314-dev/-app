@@ -7,7 +7,7 @@ st.set_page_config(page_title="予備試験 論証暗記ツール Pro", layout="
 # ==========================================
 # 🔴 ご自身のSupabaseのURLとAPIキー（anon key）に書き換えてください
 # ==========================================
-SUPABASE_URL = "https://ymozpxiqdsuhhnizfey.supabase.co"
+SUPABASE_URL = "https://ymozpxiqdsuhhhnizfey.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inltb3pweGlxZHN1aGhobml6ZmV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5Mjk1MDgsImV4cCI6MjA5NjUwNTUwOH0.ooR2slaqn1VbAYZnTQS6wTzOia5ChYUUNDfHsd75gsA"
 
 # Supabaseクライアントの初期化
